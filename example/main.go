@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	proxysetup.TurnOnAutoProxy("a.com")
+	proxysetup.TurnOnAutoProxy("localhost:12345/pac")
 	proxysetup.TurnOffAutoProxy()
 }

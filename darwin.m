@@ -81,7 +81,7 @@ void toggleAutoProxyConfigFile(const char* cOnOff, const char* cAutoProxyConfigF
     newPreferences = [NSMutableDictionary dictionaryWithDictionary: oldPreferences];
     wantedHost = @"localhost";
 
-    if([onOff  isEqual: @"on"]) {//Turn proxy configuration ON
+    if([onOff isEqual: @"on"]) {//Turn proxy configuration ON
             [newPreferences setValue: wantedHost forKey:(NSString*)kSCPropNetProxiesHTTPProxy];
             [newPreferences setValue:[NSNumber numberWithInt:1] forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigEnable];
             [newPreferences setValue:autoProxyConfigFileUrl forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigURLString];
