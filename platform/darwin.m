@@ -21,8 +21,6 @@
 #import <Foundation/Foundation.h>
 #import <SystemConfiguration/SCPreferences.h>
 #import <SystemConfiguration/SCNetworkConfiguration.h>
-#include "proxysetup.h"
-
 
 void toggleAutoProxyConfigFile(const char* cOnOff, const char* cAutoProxyConfigFileUrl)
 {
