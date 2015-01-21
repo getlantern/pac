@@ -22,13 +22,9 @@
 #import <SystemConfiguration/SCPreferences.h>
 #import <SystemConfiguration/SCNetworkConfiguration.h>
 
-void toggleAutoProxyConfigFile(const char* cOnOff, const char* cAutoProxyConfigFileUrl)
+void togglePac(int onOff, const char* cPacUrl)
 {
-  NSString* onOff = [[NSString alloc]
-    initWithCString: cOnOff encoding:NSUTF8StringEncoding];
-  NSString* autoProxyConfigFileUrl = [[NSString alloc]
-    initWithCString: cAutoProxyConfigFileUrl encoding:NSUTF8StringEncoding];
-  NSLog(@"Toggle %@ auto proxy configuration file to %@", onOff, autoProxyConfigFileUrl);
+  NSString* pacUrl = [[NSString alloc] initWithCString: cPacUrl encoding:NSUTF8StringEncoding];
   BOOL success = FALSE;
 
   SCNetworkSetRef networkSetRef;
@@ -66,7 +62,6 @@ void toggleAutoProxyConfigFile(const char* cOnOff, const char* cAutoProxyConfigF
   networkServiceRef = NULL;
   for (long i = 0; i < CFArrayGetCount(networkServicesArrayRef); i++) {
     networkServiceRef = CFArrayGetValueAtIndex(networkServicesArrayRef, i);
-    NSLog(@"Setting proxy for device %@", SCNetworkServiceGetName(networkServiceRef));
 
     // Get proxy protocol
     proxyProtocolRef = SCNetworkServiceCopyProtocol(networkServiceRef, kSCNetworkProtocolTypeProxies);
@@ -79,14 +74,15 @@ void toggleAutoProxyConfigFile(const char* cOnOff, const char* cAutoProxyConfigF
     newPreferences = [NSMutableDictionary dictionaryWithDictionary: oldPreferences];
     wantedHost = @"localhost";
 
-    if([onOff isEqual: @"on"]) {//Turn proxy configuration ON
-            [newPreferences setValue: wantedHost forKey:(NSString*)kSCPropNetProxiesHTTPProxy];
-            [newPreferences setValue:[NSNumber numberWithInt:1] forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigEnable];
-            [newPreferences setValue:autoProxyConfigFileUrl forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigURLString];
-            NSLog(@"Setting Proxy ON with: %@", newPreferences);
+    if(onOff == PAC_ON) {//Turn proxy configuration ON
+      [newPreferences setValue: wantedHost forKey:(NSString*)kSCPropNetProxiesHTTPProxy];
+      [newPreferences setValue:[NSNumber numberWithInt:1] forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigEnable];
+      [newPreferences setValue:pacUrl forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigURLString];
+      NSLog(@"Setting pac ON for device %@ with: %@",
+          SCNetworkServiceGetName(networkServiceRef), newPreferences);
     } else {//Turn proxy configuration OFF
       [newPreferences setValue:[NSNumber numberWithInt:0] forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigEnable];
-      NSLog(@"Setting Proxy OFF");
+      NSLog(@"Setting pac OFF for device %@", SCNetworkServiceGetName(networkServiceRef));
     }
 
     success = SCNetworkProtocolSetConfiguration(proxyProtocolRef, (__bridge CFDictionaryRef)newPreferences);

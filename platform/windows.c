@@ -59,7 +59,7 @@ LPTSTR FindActiveConnection() {
 	return NULL; // Couldn't find an active dial-up/VPN connection; return NULL
 }
 
-void toggleAutoProxyConfigFile(const char* cOnOff, const char* cAutoProxyConfigFileUrl)
+void togglePac(int onOff, const char* pacUrl)
 {
 	INTERNET_PER_CONN_OPTION_LIST options;
 	DWORD   dwBufferSize = sizeof(options);
@@ -74,9 +74,9 @@ void toggleAutoProxyConfigFile(const char* cOnOff, const char* cAutoProxyConfigF
 
 	options.pOptions[0].dwOption = INTERNET_PER_CONN_FLAGS;
 	options.pOptions[1].dwOption = INTERNET_PER_CONN_AUTOCONFIG_URL;
-	if (strcmp(cOnOff, "on") == 0) {
+	if (onOff == PAC_ON) {
 		options.pOptions[0].Value.dwValue = PROXY_TYPE_AUTO_PROXY_URL;
-		options.pOptions[1].Value.pszValue = (char*)cAutoProxyConfigFileUrl;
+		options.pOptions[1].Value.pszValue = (char*)pacUrl;
 	}
 	else {
 		options.pOptions[0].Value.dwValue = PROXY_TYPE_DIRECT;

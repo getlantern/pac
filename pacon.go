@@ -13,9 +13,9 @@ package pacon
 import "C"
 
 func PacOn(pacUrl string) {
-	C.toggleAutoProxyConfigFile(C.CString("on"), C.CString(pacUrl))
+	C.togglePac(C.PAC_ON, C.CString(pacUrl))
 }
 
 func PacOff() {
-	C.toggleAutoProxyConfigFile(C.CString("off"), C.CString(""))
+	C.togglePac(C.PAC_OFF, C.CString(""))
 }
