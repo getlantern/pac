@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/fffw/proxysetup"
+
+	"github.com/getlantern/pacon"
 )
 
 func main() {
-	proxysetup.TurnOnAutoProxy("localhost:12345/pac")
+	pacon.PacOn("localhost:12345/pac")
 	fmt.Println("proxy set, any key to continue...")
 	var i int
 	fmt.Scanf("%d\n", &i)
-	proxysetup.TurnOffAutoProxy()
+	pacon.PacOff()
 }

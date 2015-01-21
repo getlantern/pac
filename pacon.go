@@ -1,4 +1,4 @@
-package proxysetup
+package pacon
 
 /*
 #cgo linux pkg-config: gtk+-3.0
@@ -8,14 +8,14 @@ package proxysetup
 #cgo darwin CFLAGS: -DDARWIN -x objective-c
 #cgo darwin LDFLAGS: -framework Cocoa -framework SystemConfiguration -framework Security
 
-#include "proxysetup.h"
+#include "pacon.h"
 */
 import "C"
 
-func TurnOnAutoProxy(pacUrl string) {
+func PacOn(pacUrl string) {
 	C.toggleAutoProxyConfigFile(C.CString("on"), C.CString(pacUrl))
 }
 
-func TurnOffAutoProxy() {
+func PacOff() {
 	C.toggleAutoProxyConfigFile(C.CString("off"), C.CString(""))
 }

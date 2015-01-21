@@ -1,4 +1,4 @@
-#include "proxysetup.h"
+#include "pacon.h"
 
 #ifdef WIN32
 #include "platform/windows.c"
