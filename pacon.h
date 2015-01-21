@@ -1,5 +1,5 @@
-const static int PAC_ON = 1;
-const static int PAC_OFF = 0;
+const extern int PAC_ON;
+const extern int PAC_OFF;
 
 void togglePac(int onOff, const char* autoProxyConfigFileUrl);
 
