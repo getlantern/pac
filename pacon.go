@@ -9,13 +9,21 @@ package pacon
 #cgo darwin LDFLAGS: -framework Cocoa -framework SystemConfiguration -framework Security
 
 #include "pacon.h"
+#include <stdlib.h>
+
+const char* EMPTY_STRING = "";
 */
 import "C"
+import "unsafe"
 
+/* Tells OS to configure proxy through `pacUrl` */
 func PacOn(pacUrl string) {
-	C.togglePac(C.PAC_ON, C.CString(pacUrl))
+	cPacUrl := C.CString(pacUrl)
+	C.togglePac(C.PAC_ON, cPacUrl)
+	C.free(unsafe.Pointer(cPacUrl))
 }
 
+/* Set proxy mode back to direct/none */
 func PacOff() {
-	C.togglePac(C.PAC_OFF, C.CString(""))
+	C.togglePac(C.PAC_OFF, C.EMPTY_STRING)
 }
