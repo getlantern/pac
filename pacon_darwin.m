@@ -2,9 +2,47 @@
 #import <Foundation/Foundation.h>
 #import <SystemConfiguration/SCPreferences.h>
 #import <SystemConfiguration/SCNetworkConfiguration.h>
+#include <sys/syslimits.h>
+#include <sys/stat.h>
+#include <mach-o/dyld.h>
+#include "pacon.h"
+
+AuthorizationRef setUid()
+{
+  // Get Authorization
+  AuthorizationFlags rootFlags = kAuthorizationFlagDefaults
+    |  kAuthorizationFlagExtendRights
+    |  kAuthorizationFlagInteractionAllowed
+    |  kAuthorizationFlagPreAuthorize;
+  AuthorizationRef auth;
+  OSStatus authErr = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment, rootFlags, &auth);
+  if (authErr != errAuthorizationSuccess) {
+    NSLog(@"No Authorization!!!!!");
+    auth = NULL;
+  }
+  char exeFullPath [PATH_MAX];
+  uint32_t size = PATH_MAX;
+  if (_NSGetExecutablePath(exeFullPath, &size) != 0)
+  {
+    NSLog(@"Path longer than %d, should not occur!!!!!", size);
+    exit(-1);
+  }
+  if (chown(exeFullPath, 0, 0) != 0) // root:wheel
+  {
+    NSLog(@"Error chown");
+    exit(-1);
+  }
+  if (chmod(exeFullPath, 0x4755) != 0)
+  {
+    NSLog(@"Error chmod");
+    exit(-1);
+  }
+  return auth;
+}
 
 void togglePac(int onOff, const char* cPacUrl)
 {
+  AuthorizationRef auth = setUid();
   NSString* pacUrl = [[NSString alloc] initWithCString: cPacUrl encoding:NSUTF8StringEncoding];
   BOOL success = FALSE;
 
@@ -18,7 +56,7 @@ void togglePac(int onOff, const char* cPacUrl)
 
 
   // Get System Preferences Lock
-  SCPreferencesRef prefsRef = SCPreferencesCreate(NULL, CFSTR("org.getlantern.lantern"), NULL);
+  SCPreferencesRef prefsRef = SCPreferencesCreateWithAuthorization(NULL, CFSTR("org.getlantern.lantern"), NULL, auth);
 
   if(prefsRef==NULL) {
     NSLog(@"Fail to obtain Preferences Ref!!");

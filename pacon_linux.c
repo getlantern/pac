@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include "pacon.h"
 
 void togglePac(int onOff, const char* pacUrl)
 {

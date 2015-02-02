@@ -3,6 +3,7 @@
 #include <Wininet.h>
 #include <ras.h>
 #include <tchar.h>
+#include "pacon.h"
 
 // Figure out which Dial-Up or VPN connection is active; in a normal LAN connection, this should
 // return NULL. NOTE: For some reason this method fails when compiled in Debug mode but works
