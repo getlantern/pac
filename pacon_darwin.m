@@ -7,132 +7,63 @@
 #include <mach-o/dyld.h>
 #include "pacon.h"
 
-AuthorizationRef setUid()
-{
-  // Get Authorization
-  AuthorizationFlags rootFlags = kAuthorizationFlagDefaults
-    |  kAuthorizationFlagExtendRights
-    |  kAuthorizationFlagInteractionAllowed
-    |  kAuthorizationFlagPreAuthorize;
-  AuthorizationRef auth;
-  OSStatus authErr = AuthorizationCreate(NULL, kAuthorizationEmptyEnvironment, rootFlags, &auth);
-  if (authErr != errAuthorizationSuccess) {
-    NSLog(@"No Authorization!!!!!");
-    auth = NULL;
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+void runAuthorized(const char *path) {
+  OSStatus status;
+
+  AuthorizationItem authItems[1];
+  authItems[0].name = kAuthorizationRightExecute;
+  authItems[0].valueLength = 0;
+  authItems[0].value = NULL;
+  authItems[0].flags = 0;
+
+  AuthorizationRights authRights;
+  authRights.count = sizeof(authItems) / sizeof(authItems[0]);
+  authRights.items = authItems;
+
+  AuthorizationFlags authFlags;
+  authFlags = kAuthorizationFlagDefaults | kAuthorizationFlagInteractionAllowed | kAuthorizationFlagExtendRights;
+
+  AuthorizationRef authRef;
+  status = AuthorizationCreate(&authRights, kAuthorizationEmptyEnvironment, authFlags, &authRef);
+
+  if(status == errAuthorizationSuccess) {
+    FILE *pipe = NULL;
+    char readBuffer[256];
+    char* argv[] = { "setuid", NULL };
+    status = AuthorizationExecuteWithPrivileges(authRef, path, kAuthorizationFlagDefaults, argv, &pipe);
+    if(status == errAuthorizationSuccess) {
+      read(fileno(pipe), readBuffer, sizeof(readBuffer));
+      fclose(pipe);
+    }
+
+    status = AuthorizationFree(authRef, kAuthorizationFlagDestroyRights);
   }
-  char exeFullPath [PATH_MAX];
-  uint32_t size = PATH_MAX;
-  if (_NSGetExecutablePath(exeFullPath, &size) != 0)
-  {
-    NSLog(@"Path longer than %d, should not occur!!!!!", size);
-    exit(-1);
-  }
-  if (chown(exeFullPath, 0, 0) != 0) // root:wheel
-  {
-    NSLog(@"Error chown");
-    exit(-1);
-  }
-  if (chmod(exeFullPath, 0x4755) != 0)
-  {
-    NSLog(@"Error chmod");
-    exit(-1);
-  }
-  return auth;
 }
 
-void togglePac(int onOff, const char* cPacUrl)
+void togglePacWithHelper(int onOff, const char* cPacUrl, const char* path)
 {
-  AuthorizationRef auth = setUid();
-  NSString* pacUrl = [[NSString alloc] initWithCString: cPacUrl encoding:NSUTF8StringEncoding];
-  BOOL success = FALSE;
+  int pid = [[NSProcessInfo processInfo] processIdentifier];
+  NSPipe *pipe = [NSPipe pipe];
+  NSFileHandle *file = pipe.fileHandleForReading;
 
-  SCNetworkSetRef networkSetRef;
-  CFArrayRef networkServicesArrayRef;
-  SCNetworkServiceRef networkServiceRef;
-  SCNetworkProtocolRef proxyProtocolRef;
-  NSDictionary *oldPreferences;
-  NSMutableDictionary *newPreferences;
-  NSString *wantedHost;
-
-
-  // Get System Preferences Lock
-  SCPreferencesRef prefsRef = SCPreferencesCreateWithAuthorization(NULL, CFSTR("org.getlantern.lantern"), NULL, auth);
-
-  if(prefsRef==NULL) {
-    NSLog(@"Fail to obtain Preferences Ref!!");
-    goto freePrefsRef;
+  NSTask *task = [[NSTask alloc] init];
+  task.launchPath = [[NSString alloc] initWithUTF8String: path];
+  NSString* pacUrl = [[NSString alloc] initWithUTF8String: cPacUrl];
+  if (onOff == PAC_ON) {
+    task.arguments = @[@"on", pacUrl];
+  } else {
+    task.arguments = @[@"off", pacUrl];
   }
+  task.standardOutput = pipe;
 
-  success = SCPreferencesLock(prefsRef, TRUE);
-  if (!success) {
-    NSLog(@"Fail to obtain PreferencesLock");
-    goto freePrefsRef;
-  }
+  [task launch];
 
-  // Get available network services
-  networkSetRef = SCNetworkSetCopyCurrent(prefsRef);
-  if(networkSetRef == NULL) {
-    NSLog(@"Fail to get available network services");
-    goto freeNetworkSetRef;
-  }
+  NSData *data = [file readDataToEndOfFile];
+  [file closeFile];
 
-  //Look up interface entry
-  networkServicesArrayRef = SCNetworkSetCopyServices(networkSetRef);
-  networkServiceRef = NULL;
-  for (long i = 0; i < CFArrayGetCount(networkServicesArrayRef); i++) {
-    networkServiceRef = CFArrayGetValueAtIndex(networkServicesArrayRef, i);
-
-    // Get proxy protocol
-    proxyProtocolRef = SCNetworkServiceCopyProtocol(networkServiceRef, kSCNetworkProtocolTypeProxies);
-    if(proxyProtocolRef == NULL) {
-      NSLog(@"Couldn't acquire copy of proxyProtocol");
-      goto freeProxyProtocolRef;
-    }
-
-    oldPreferences = (__bridge NSDictionary*)SCNetworkProtocolGetConfiguration(proxyProtocolRef);
-    newPreferences = [NSMutableDictionary dictionaryWithDictionary: oldPreferences];
-    wantedHost = @"localhost";
-
-    if(onOff == PAC_ON) {//Turn proxy configuration ON
-      [newPreferences setValue: wantedHost forKey:(NSString*)kSCPropNetProxiesHTTPProxy];
-      [newPreferences setValue:[NSNumber numberWithInt:1] forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigEnable];
-      [newPreferences setValue:pacUrl forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigURLString];
-      NSLog(@"Setting pac ON for device %@ with: %@",
-          SCNetworkServiceGetName(networkServiceRef), newPreferences);
-    } else {//Turn proxy configuration OFF
-      [newPreferences setValue:[NSNumber numberWithInt:0] forKey:(NSString*)kSCPropNetProxiesProxyAutoConfigEnable];
-      NSLog(@"Setting pac OFF for device %@", SCNetworkServiceGetName(networkServiceRef));
-    }
-
-    success = SCNetworkProtocolSetConfiguration(proxyProtocolRef, (__bridge CFDictionaryRef)newPreferences);
-    if(!success) {
-      NSLog(@"Failed to set Protocol Configuration");
-      goto freeProxyProtocolRef;
-    }
-
-freeProxyProtocolRef:
-    CFRelease(proxyProtocolRef);
-  }
-
-  success = SCPreferencesCommitChanges(prefsRef);
-  if(!success) {
-    NSLog(@"Failed to Commit Changes");
-    goto freeNetworkServicesArrayRef;
-  }
-
-  success = SCPreferencesApplyChanges(prefsRef);
-  if(!success) {
-    NSLog(@"Failed to Apply Changes");
-    goto freeNetworkServicesArrayRef;
-  }
-  //Free Resources
-freeNetworkServicesArrayRef:
-  CFRelease(networkServicesArrayRef);
-freeNetworkSetRef:
-  CFRelease(networkSetRef);
-freePrefsRef:
-  SCPreferencesUnlock(prefsRef);
-  CFRelease(prefsRef);
-
+  NSString *grepOutput = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+  NSLog (@"grep returned:\n%@", grepOutput);
   return;
 }
