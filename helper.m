@@ -9,38 +9,43 @@
 #include <mach-o/dyld.h>
 #include "pacon.h"
 
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+void usage()
+{
+  puts("Usage: helper [setuid | on | off] <pac url>");
+}
 
-void setUid()
+int setUid()
 {
   AuthorizationRef authRef;
   OSStatus result;
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   result = AuthorizationCopyPrivilegedReference(&authRef, kAuthorizationFlagDefaults);
+#pragma GCC diagnostic warning "-Wdeprecated-declarations"
   if (result != errAuthorizationSuccess) {
     NSLog(@"Not running as root");
-    return;
+    return EPERM;
   }
   char exeFullPath [PATH_MAX];
   uint32_t size = PATH_MAX;
   if (_NSGetExecutablePath(exeFullPath, &size) != 0)
   {
     NSLog(@"Path longer than %d, should not occur!!!!!", size);
-    return;
+    return E2BIG;
   }
   if (chown(exeFullPath, 0, 0) != 0) // root:wheel
   {
     NSLog(@"Error chown");
-    return;
+    return EPERM;
   }
   if (chmod(exeFullPath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH | S_ISUID) != 0)
   {
     NSLog(@"Error chmod");
-    return;
+    return EPERM;
   }
-  return;
+  return 0;
 }
 
-void togglePac(int onOff, const char* cPacUrl)
+int togglePac(int onOff, const char* cPacUrl)
 {
   NSString* pacUrl = [[NSString alloc] initWithCString: cPacUrl encoding:NSUTF8StringEncoding];
   BOOL success = FALSE;
@@ -124,6 +129,7 @@ freeProxyProtocolRef:
     NSLog(@"Failed to Apply Changes");
     goto freeNetworkServicesArrayRef;
   }
+success = TRUE;
   //Free Resources
 freeNetworkServicesArrayRef:
   CFRelease(networkServicesArrayRef);
@@ -133,21 +139,30 @@ freePrefsRef:
   SCPreferencesUnlock(prefsRef);
   CFRelease(prefsRef);
 
-  return;
+  return success == TRUE ? 0 : EPERM;
 }
 
 
 int main() {
   NSArray *args = [[NSProcessInfo processInfo] arguments];
-
-  // Become root in order to support reconfiguring network services
-  setuid(0);
-  if ([[args objectAtIndex:1] isEqual: @"setuid"]) {
-    setUid();
-    return 0;
+  if (args.count < 2) {
+    usage();
+    return EINVAL;
   }
-  BOOL onOff = [[args objectAtIndex:1] isEqual: @"on"] ? TRUE : FALSE;
-  togglePac(onOff, [[args objectAtIndex:2] UTF8String] );
+  if ([[args objectAtIndex:1] isEqual: @"setuid"]) {
+    return setUid();
+  } else if ([[args objectAtIndex:1] isEqual: @"on"]) {
+    if (args.count < 3) {
+      usage();
+      return EINVAL;
+    }
+    return togglePac(PAC_ON, [[args objectAtIndex:2] UTF8String] );
+  } else if ([[args objectAtIndex:1] isEqual: @"off"]) {
+    return togglePac(PAC_OFF, "");
+  } else {
+    usage();
+    return EINVAL;
+  }
 
   return 0;
 }

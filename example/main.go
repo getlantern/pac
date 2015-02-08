@@ -7,8 +7,12 @@ import (
 )
 
 func main() {
-	pacon.PacOn("localhost:12345/pac")
-	fmt.Println("proxy set, any key to continue...")
+	err := pacon.PacOn("localhost:12345/pac")
+	if err != nil {
+		fmt.Printf("Error set proxy: %s\n", err)
+		return
+	}
+	fmt.Println("proxy set, Enter continue...")
 	var i int
 	fmt.Scanf("%d\n", &i)
 	pacon.PacOff()

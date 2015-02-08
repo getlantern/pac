@@ -15,13 +15,15 @@ import "C"
 import "unsafe"
 
 /* Tells OS to configure proxy through `pacUrl` */
-func PacOn(pacUrl string) {
+func PacOn(pacUrl string) (err error) {
 	cPacUrl := C.CString(pacUrl)
 	C.togglePac(C.PAC_ON, cPacUrl)
 	C.free(unsafe.Pointer(cPacUrl))
+	return
 }
 
 /* Set proxy mode back to direct/none */
-func PacOff() {
+func PacOff() (err error) {
 	C.togglePac(C.PAC_OFF, C.EMPTY_STRING)
+	return
 }

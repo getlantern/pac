@@ -7,11 +7,7 @@
 #include <mach-o/dyld.h>
 #include "pacon.h"
 
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
-void runAuthorized(const char *path) {
-  OSStatus status;
-
+int runAuthorized(const char *path) {
   AuthorizationItem authItems[1];
   authItems[0].name = kAuthorizationRightExecute;
   authItems[0].valueLength = 0;
@@ -26,44 +22,37 @@ void runAuthorized(const char *path) {
   authFlags = kAuthorizationFlagDefaults | kAuthorizationFlagInteractionAllowed | kAuthorizationFlagExtendRights;
 
   AuthorizationRef authRef;
-  status = AuthorizationCreate(&authRights, kAuthorizationEmptyEnvironment, authFlags, &authRef);
-
-  if(status == errAuthorizationSuccess) {
-    FILE *pipe = NULL;
-    char readBuffer[256];
-    char* argv[] = { "setuid", NULL };
-    status = AuthorizationExecuteWithPrivileges(authRef, path, kAuthorizationFlagDefaults, argv, &pipe);
-    if(status == errAuthorizationSuccess) {
-      read(fileno(pipe), readBuffer, sizeof(readBuffer));
-      fclose(pipe);
-    }
-
-    status = AuthorizationFree(authRef, kAuthorizationFlagDestroyRights);
+  OSStatus status = AuthorizationCreate(&authRights, kAuthorizationEmptyEnvironment, authFlags, &authRef);
+  if(status != errAuthorizationSuccess) {
+    return -1;
   }
+  FILE *pipe = NULL;
+  char readBuffer[256];
+  char* argv[] = { "setuid", NULL };
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  status = AuthorizationExecuteWithPrivileges(authRef, path, kAuthorizationFlagDefaults, argv, &pipe);
+#pragma GCC diagnostic warning "-Wdeprecated-declarations"
+  if(status == errAuthorizationSuccess) {
+    while (read(fileno(pipe), readBuffer, sizeof(readBuffer)) > 0) {
+      ;
+    }
+    fclose(pipe);
+  }
+  AuthorizationFree(authRef, kAuthorizationFlagDestroyRights);
+  return status == errAuthorizationSuccess ? 0 : -1;
 }
 
-void togglePacWithHelper(int onOff, const char* cPacUrl, const char* path)
+int togglePacWithHelper(int onOff, const char* cPacUrl, const char* path)
 {
-  int pid = [[NSProcessInfo processInfo] processIdentifier];
-  NSPipe *pipe = [NSPipe pipe];
-  NSFileHandle *file = pipe.fileHandleForReading;
-
   NSTask *task = [[NSTask alloc] init];
   task.launchPath = [[NSString alloc] initWithUTF8String: path];
   NSString* pacUrl = [[NSString alloc] initWithUTF8String: cPacUrl];
   if (onOff == PAC_ON) {
     task.arguments = @[@"on", pacUrl];
   } else {
-    task.arguments = @[@"off", pacUrl];
+    task.arguments = @[@"off", @""];
   }
-  task.standardOutput = pipe;
-
   [task launch];
-
-  NSData *data = [file readDataToEndOfFile];
-  [file closeFile];
-
-  NSString *grepOutput = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
-  NSLog (@"grep returned:\n%@", grepOutput);
-  return;
+  [task waitUntilExit];
+  return [task terminationStatus];
 }
