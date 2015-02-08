@@ -60,7 +60,7 @@ LPTSTR FindActiveConnection() {
 	return NULL; // Couldn't find an active dial-up/VPN connection; return NULL
 }
 
-void togglePac(int onOff, const char* pacUrl)
+int togglePac(int onOff, const char* pacUrl)
 {
 	INTERNET_PER_CONN_OPTION_LIST options;
 	DWORD   dwBufferSize = sizeof(options);
@@ -70,7 +70,7 @@ void togglePac(int onOff, const char* pacUrl)
 	options.dwOptionCount = 2;
 	options.pOptions = calloc(2, sizeof(INTERNET_PER_CONN_OPTION));
 	if(!options.pOptions) {
-		return;
+		return -1;
 	}
 
 	options.pOptions[0].dwOption = INTERNET_PER_CONN_FLAGS;
@@ -90,4 +90,5 @@ void togglePac(int onOff, const char* pacUrl)
 	InternetSetOption(NULL, INTERNET_OPTION_REFRESH , NULL, 0);
 
 	free(options.pOptions);
+	return 0;
 }
