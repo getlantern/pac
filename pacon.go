@@ -10,6 +10,8 @@ package pacon
 #include <stdlib.h>
 
 const char* EMPTY_STRING = "";
+const int PAC_ON = 1;
+const int PAC_OFF = 0;
 */
 import "C"
 import "unsafe"

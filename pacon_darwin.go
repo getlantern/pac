@@ -10,6 +10,9 @@ package pacon
 #include <stdlib.h>
 
 const char* EMPTY_STRING = "";
+const int PAC_ON = 1;
+const int PAC_OFF = 0;
+
 int runAuthorized(const char *path);
 int togglePacWithHelper(int onOff, const char* autoProxyConfigFileUrl, const char* path);
 */
@@ -23,7 +26,7 @@ import (
 	"unsafe"
 )
 
-var helperToolName string = "helper"
+var helperToolName string = "elevate-helper"
 
 // On Mac OSX, we need a previledged action.
 // SetHelperNameOnOSX sets the file name to generated.
