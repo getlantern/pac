@@ -2,11 +2,17 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/getlantern/pacon"
 )
 
 func main() {
+	if runtime.GOOS == "darwin" {
+		pacon.SetHelperNameOnOSX("neat-helper")
+		pacon.SetIconPathOnOSX("icon.png")
+		pacon.SetPromptOnOSX("Input your password and save the world!")
+	}
 	err := pacon.PacOn("localhost:12345/pac")
 	if err != nil {
 		fmt.Printf("Error set proxy: %s\n", err)

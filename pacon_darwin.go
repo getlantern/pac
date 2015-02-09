@@ -3,18 +3,16 @@
 package pacon
 
 /*
-#cgo darwin CFLAGS: -x objective-c
+#cgo darwin CFLAGS: -DDARWIN -x objective-c
 #cgo darwin LDFLAGS: -framework Cocoa -framework SystemConfiguration -framework Security
 
 #include "pacon.h"
 #include <stdlib.h>
 
-const char* EMPTY_STRING = "";
 const int PAC_ON = 1;
 const int PAC_OFF = 0;
 
-int runAuthorized(const char *path);
-int togglePacWithHelper(int onOff, const char* autoProxyConfigFileUrl, const char* path);
+const char* NULL_STRING = NULL;
 */
 import "C"
 import (
@@ -26,17 +24,32 @@ import (
 	"unsafe"
 )
 
-var helperToolName string = "elevate-helper"
+var helperToolName string = "helper"
+var iconPath string
+var prompt string
 
-// On Mac OSX, we need a previledged action.
-// SetHelperNameOnOSX sets the file name to generated.
+// On Mac OSX, we'll extract a helper tool with root priviledge
+// under application's same directory to actually change proxy setup,
+// SetHelperNameOnOSX specifies the file name to be generated.
 func SetHelperNameOnOSX(name string) {
 	helperToolName = name
 }
 
-func helperAbsPath() string {
+// Mac OSX will show a dialog requesting user to input password,
+// SetIconPathOnOSX specifies the icon to be shown on the dialog.
+func SetIconPathOnOSX(i string) {
+	iconPath = i
+}
+
+// Mac OSX will show a dialog requesting user to input password,
+// SetPromptOnOSX specifies the text to be shown on this dialog.
+func SetPromptOnOSX(p string) {
+	prompt = p
+}
+
+func absPath(name string) string {
 	wd, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	return filepath.Join(wd, helperToolName)
+	return filepath.Join(wd, name)
 }
 
 func doTogglePac(onOff C.int, pacUrl *C.char) (err error) {
@@ -44,7 +57,7 @@ func doTogglePac(onOff C.int, pacUrl *C.char) (err error) {
 		err = fmt.Errorf("Unable to extract helper tool: %s", err)
 		return
 	}
-	ret := C.togglePacWithHelper(onOff, pacUrl, C.CString(helperAbsPath()))
+	ret := C.togglePacWithHelper(onOff, pacUrl, C.CString(absPath(helperToolName)))
 	if ret != 0 {
 		err = fmt.Errorf("Failed to run helper tool to set pac")
 	}
@@ -60,11 +73,11 @@ func PacOn(pacUrl string) (err error) {
 
 /* PacOff sets proxy mode back to direct/none */
 func PacOff() (err error) {
-	return doTogglePac(C.PAC_OFF, C.EMPTY_STRING)
+	return doTogglePac(C.PAC_OFF, C.NULL_STRING)
 }
 
 func ensureHelperTool() (err error) {
-	absPath := helperAbsPath()
+	absPath := absPath(helperToolName)
 	var s syscall.Stat_t
 	err = syscall.Stat(absPath, &s)
 	if err != nil {
@@ -84,7 +97,18 @@ func extractHelper(path string) (err error) {
 	if err != nil {
 		err = fmt.Errorf("Error write helper file %s: %s", path, err)
 	}
-	ret := C.runAuthorized(C.CString(path))
+	cPrompt := C.NULL_STRING
+	if prompt != "" {
+		cPrompt = C.CString(prompt)
+	}
+	cIconPath := C.NULL_STRING
+	if iconPath != "" {
+		if !filepath.IsAbs(iconPath) {
+			iconPath = absPath(iconPath)
+		}
+		cIconPath = C.CString(iconPath)
+	}
+	ret := C.runAuthorized(C.CString(path), cPrompt, cIconPath)
 	if ret != 0 {
 		err = fmt.Errorf("Unable to runAuthorized on helper tool")
 	}

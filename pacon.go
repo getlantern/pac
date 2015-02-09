@@ -9,9 +9,9 @@ package pacon
 #include "pacon.h"
 #include <stdlib.h>
 
-const char* EMPTY_STRING = "";
 const int PAC_ON = 1;
 const int PAC_OFF = 0;
+const char* NULL_STRING = NULL;
 */
 import "C"
 import "unsafe"
@@ -26,6 +26,6 @@ func PacOn(pacUrl string) (err error) {
 
 /* Set proxy mode back to direct/none */
 func PacOff() (err error) {
-	C.togglePac(C.PAC_OFF, C.EMPTY_STRING)
+	C.togglePac(C.PAC_OFF, C.NULL_STRING)
 	return
 }

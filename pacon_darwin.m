@@ -7,7 +7,30 @@
 #include <mach-o/dyld.h>
 #include "pacon.h"
 
-int runAuthorized(const char *path) {
+int runAuthorized(char *path, char *prompt, char *iconPath)
+{
+  AuthorizationEnvironment authEnv;
+  AuthorizationItem kAuthEnv[2];
+  authEnv.items = kAuthEnv;
+  authEnv.count = 0;
+
+  if (prompt != NULL_STRING)
+  {
+    kAuthEnv[authEnv.count].name = kAuthorizationEnvironmentPrompt;
+    kAuthEnv[authEnv.count].valueLength = strlen(prompt);
+    kAuthEnv[authEnv.count].value = prompt;
+    kAuthEnv[authEnv.count].flags = 0;
+    authEnv.count++;
+  }
+  if (iconPath != NULL_STRING)
+  {
+    kAuthEnv[authEnv.count].name = kAuthorizationEnvironmentIcon;
+    kAuthEnv[authEnv.count].valueLength = strlen(iconPath);
+    kAuthEnv[authEnv.count].value = iconPath;
+    kAuthEnv[authEnv.count].flags = 0;
+    authEnv.count++;
+  }
+
   AuthorizationItem authItems[1];
   authItems[0].name = kAuthorizationRightExecute;
   authItems[0].valueLength = 0;
@@ -22,7 +45,7 @@ int runAuthorized(const char *path) {
   authFlags = kAuthorizationFlagDefaults | kAuthorizationFlagInteractionAllowed | kAuthorizationFlagExtendRights;
 
   AuthorizationRef authRef;
-  OSStatus status = AuthorizationCreate(&authRights, kAuthorizationEmptyEnvironment, authFlags, &authRef);
+  OSStatus status = AuthorizationCreate(&authRights, &authEnv, authFlags, &authRef);
   if(status != errAuthorizationSuccess) {
     return -1;
   }
