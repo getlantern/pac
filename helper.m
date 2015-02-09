@@ -7,7 +7,6 @@
 #include <sys/syslimits.h>
 #include <sys/stat.h>
 #include <mach-o/dyld.h>
-#include "pacon.h"
 
 void usage()
 {
@@ -45,7 +44,7 @@ int setUid()
   return 0;
 }
 
-int togglePac(int onOff, const char* cPacUrl)
+int togglePac(BOOL onOff, const char* cPacUrl)
 {
   NSString* pacUrl = [[NSString alloc] initWithCString: cPacUrl encoding:NSUTF8StringEncoding];
   BOOL success = FALSE;
@@ -156,9 +155,9 @@ int main() {
       usage();
       return EINVAL;
     }
-    return togglePac(PAC_ON, [[args objectAtIndex:2] UTF8String] );
+    return togglePac(TRUE, [[args objectAtIndex:2] UTF8String] );
   } else if ([[args objectAtIndex:1] isEqual: @"off"]) {
-    return togglePac(PAC_OFF, "");
+    return togglePac(FALSE, "");
   } else {
     usage();
     return EINVAL;
