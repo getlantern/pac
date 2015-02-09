@@ -16,6 +16,15 @@ const char* NULL_STRING = NULL;
 import "C"
 import "unsafe"
 
+func SetHelperNameOnOSX(name string) {
+}
+
+func SetIconPathOnOSX(i string) {
+}
+
+func SetPromptOnOSX(p string) {
+}
+
 /* Tells OS to configure proxy through `pacUrl` */
 func PacOn(pacUrl string) (err error) {
 	cPacUrl := C.CString(pacUrl)
