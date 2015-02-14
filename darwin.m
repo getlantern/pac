@@ -7,7 +7,6 @@
 #include <sys/syslimits.h>
 #include <sys/stat.h>
 #include <mach-o/dyld.h>
-#include "darwin.h"
 
 int runAuthorized(char *path, char *prompt, char *iconPath)
 {
@@ -16,7 +15,7 @@ int runAuthorized(char *path, char *prompt, char *iconPath)
   authEnv.items = kAuthEnv;
   authEnv.count = 0;
 
-  if (prompt != NULL_STRING)
+  if (prompt != NULL)
   {
     kAuthEnv[authEnv.count].name = kAuthorizationEnvironmentPrompt;
     kAuthEnv[authEnv.count].valueLength = strlen(prompt);
@@ -24,7 +23,7 @@ int runAuthorized(char *path, char *prompt, char *iconPath)
     kAuthEnv[authEnv.count].flags = 0;
     authEnv.count++;
   }
-  if (iconPath != NULL_STRING)
+  if (iconPath != NULL)
   {
     kAuthEnv[authEnv.count].name = kAuthorizationEnvironmentIcon;
     kAuthEnv[authEnv.count].valueLength = strlen(iconPath);

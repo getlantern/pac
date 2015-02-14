@@ -1,3 +1,5 @@
+// +build !darwin
+
 package pac
 
 func SetIconPathOnOSX(i string) {
@@ -13,4 +15,3 @@ func prestine(path string) bool {
 func elevateOnDarwin(path string) error {
 	return nil
 }
-

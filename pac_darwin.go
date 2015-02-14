@@ -1,14 +1,18 @@
 package pac
 
-import "C"
-
 /*
 #cgo darwin CFLAGS: -DDARWIN -x objective-c
 #cgo darwin LDFLAGS: -framework Cocoa -framework SystemConfiguration -framework Security
-#include "darwin.h"
 
-const char* NULL_STRING = "";
+extern int runAuthorized(char *path, char *prompt, char *iconPath);
+const char* null() { return 0; }
 */
+import "C"
+import (
+	"fmt"
+	"path/filepath"
+	"syscall"
+)
 
 var iconPath string
 var prompt string
@@ -28,21 +32,21 @@ func SetPromptOnOSX(p string) {
 func prestine(path string) bool {
 	var s syscall.Stat_t
 	// we just checked its existence, not bother checking specific error again
-	if err = syscall.Stat(absPath, &s); err != nil {
-		return false;
+	if err := syscall.Stat(path, &s); err != nil {
+		return false
 	}
 	if s.Mode&syscall.S_ISUID == 0 || s.Uid != 0 || s.Gid != 0 {
-		return false;
+		return false
 	}
-	return true;
+	return true
 }
 
 func elevateOnDarwin(path string) (err error) {
-	cPrompt := C.NULL_STRING
+	cPrompt := C.null()
 	if prompt != "" {
 		cPrompt = C.CString(prompt)
 	}
-	cIconPath := C.NULL_STRING
+	cIconPath := C.null()
 	if iconPath != "" {
 		if !filepath.IsAbs(iconPath) {
 			iconPath = absPath(iconPath)
