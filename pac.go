@@ -7,16 +7,15 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
-var helperToolName string = "pac-cmd"
+var helperPath string = "./pac"
 
 // This library will extract a helper tool under application's same directory
 // to actually change proxy setup.
-// SetHelperName specifies the file name to be generated.
-func SetHelperName(name string) {
-	helperToolName = name
+// SetHelperPath specifies the file path to be generated.
+func SetHelperPath(path string) {
+	helperPath = path
 }
 
 /* On tells OS to configure proxy through `pacUrl` */
@@ -25,7 +24,7 @@ func On(pacUrl string) (err error) {
 		err = fmt.Errorf("Unable to extract helper tool: %s", err)
 		return
 	}
-	cmd := exec.Command(absPath(helperToolName), "on", pacUrl)
+	cmd := exec.Command(helperPath, "on", pacUrl)
 	return run(cmd)
 }
 
@@ -35,7 +34,7 @@ func Off() (err error) {
 		err = fmt.Errorf("Unable to extract helper tool: %s", err)
 		return
 	}
-	cmd := exec.Command(absPath(helperToolName), "off")
+	cmd := exec.Command(helperPath, "off")
 	return run(cmd)
 }
 
@@ -50,15 +49,14 @@ func run(cmd *exec.Cmd) error {
 }
 
 func ensureHelperTool() (err error) {
-	absPath := absPath(helperToolName)
-	if _, err = os.Stat(absPath); err != nil {
-		err = extractHelper(absPath)
-	} else if !prestine(absPath) {
-		os.Remove(absPath)
+	if _, err = os.Stat(helperPath); err != nil {
+		err = extractHelper(helperPath)
+	} else if !prestine(helperPath) {
+		os.Remove(helperPath)
 		if err != nil {
-			err = fmt.Errorf("Error remove existing %s: %s", absPath, err)
+			err = fmt.Errorf("Error remove existing %s: %s", helperPath, err)
 		}
-		err = extractHelper(absPath)
+		err = extractHelper(helperPath)
 	}
 	return
 }
@@ -70,10 +68,3 @@ func extractHelper(path string) error {
 	}
 	return elevateOnDarwin(path)
 }
-
-func absPath(name string) string {
-	wd, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	return filepath.Join(wd, name)
-}
-
-

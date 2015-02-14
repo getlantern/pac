@@ -10,7 +10,6 @@ const char* null() { return 0; }
 import "C"
 import (
 	"fmt"
-	"path/filepath"
 	"syscall"
 )
 
@@ -48,9 +47,6 @@ func elevateOnDarwin(path string) (err error) {
 	}
 	cIconPath := C.null()
 	if iconPath != "" {
-		if !filepath.IsAbs(iconPath) {
-			iconPath = absPath(iconPath)
-		}
 		cIconPath = C.CString(iconPath)
 	}
 	ret := C.runAuthorized(C.CString(path), cPrompt, cIconPath)
