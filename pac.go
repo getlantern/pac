@@ -2,12 +2,12 @@ package pac
 
 import "C"
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"bytes"
 )
 
 var helperToolName string = "pac"
@@ -63,7 +63,7 @@ func ensureHelperTool() (err error) {
 }
 
 func extractHelper(path string) error {
-	err := ioutil.WriteFile(path, pacFileContent, 0755)
+	err := ioutil.WriteFile(path, pacBytes, 0755)
 	if err != nil {
 		return fmt.Errorf("Error write helper file %s: %s", path, err)
 	}
