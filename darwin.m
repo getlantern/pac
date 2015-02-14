@@ -1,3 +1,5 @@
+// +build darwin
+
 #import <Foundation/NSArray.h>
 #import <Foundation/Foundation.h>
 #import <SystemConfiguration/SCPreferences.h>

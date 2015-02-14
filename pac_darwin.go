@@ -32,7 +32,19 @@ func SetPromptOnOSX(p string) {
 	prompt = p
 }
 
-func elevate(path string) (err error) {
+func prestine(path string) bool {
+	var s syscall.Stat_t
+	// we just checked its existence, not bother checking specific error again
+	if err = syscall.Stat(absPath, &s); err != nil {
+		return false;
+	}
+	if s.Mode&syscall.S_ISUID == 0 || s.Uid != 0 || s.Gid != 0 {
+		return false;
+	}
+	return true;
+}
+
+func elevateOnDarwin(path string) (err error) {
 	cPrompt := C.NULL_STRING
 	if prompt != "" {
 		cPrompt = C.CString(prompt)
