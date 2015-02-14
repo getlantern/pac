@@ -1,8 +1,8 @@
-[pacon](https://github.com/getlantern/pacon) is a simple Go library to toggle on and off pac(proxy auto configuration) for Windows and Mac OSX.
+[pac](https://github.com/getlantern/pac) is a simple Go library to toggle on and off pac(proxy auto configuration) for Windows, Mac OSX and Linux.
 
 ```go
-pacon.PacOn(pacUrl string)
-pacon.PacOff(pacUrl string)
+pac.On(pacUrl string)
+pac.Off()
 ```
 
 ### Windows

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/getlantern/pacon"
+	"github.com/getlantern/pac"
 )
 
 func main() {

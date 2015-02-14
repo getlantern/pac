@@ -5,7 +5,7 @@
 #include <sys/syslimits.h>
 #include <sys/stat.h>
 #include <mach-o/dyld.h>
-#include "pacon.h"
+#include "darwin.h"
 
 int runAuthorized(char *path, char *prompt, char *iconPath)
 {
@@ -63,19 +63,4 @@ int runAuthorized(char *path, char *prompt, char *iconPath)
   }
   AuthorizationFree(authRef, kAuthorizationFlagDestroyRights);
   return status == errAuthorizationSuccess ? 0 : -1;
-}
-
-int togglePacWithHelper(int onOff, const char* cPacUrl, const char* path)
-{
-  NSTask *task = [[NSTask alloc] init];
-  task.launchPath = [[NSString alloc] initWithUTF8String: path];
-  NSString* pacUrl = [[NSString alloc] initWithUTF8String: cPacUrl];
-  if (onOff == PAC_ON) {
-    task.arguments = @[@"on", pacUrl];
-  } else {
-    task.arguments = @[@"off", @""];
-  }
-  [task launch];
-  [task waitUntilExit];
-  return [task terminationStatus];
 }

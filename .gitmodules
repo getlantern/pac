@@ -1,0 +1,3 @@
+[submodule "pac-cmd"]
+	path = pac-cmd
+	url = git@github.com:getlantern/pac-cmd

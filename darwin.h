@@ -1,8 +1,6 @@
 #ifndef PACON_H
 #define PACON_H
 
-extern const int PAC_ON;
-extern const int PAC_OFF;
 extern const char* NULL_STRING;
 
 #ifndef DARWIN
