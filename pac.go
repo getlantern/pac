@@ -14,6 +14,7 @@ var helperPath string = "./pac"
 // This library will extract a helper tool under application's same directory
 // to actually change proxy setup.
 // SetHelperPath specifies the file path to be generated.
+// It will be 'pac' under current work directory by default.
 func SetHelperPath(path string) {
 	helperPath = path
 }
