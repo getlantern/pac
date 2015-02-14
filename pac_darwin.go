@@ -13,13 +13,6 @@ const char* NULL_STRING = "";
 var iconPath string
 var prompt string
 
-// On Mac OSX, we'll extract a helper tool with root priviledge
-// under application's same directory to actually change proxy setup,
-// SetHelperNameOnOSX specifies the file name to be generated.
-func SetHelperNameOnOSX(name string) {
-	helperToolName = name
-}
-
 // Mac OSX will show a dialog requesting user to input password,
 // SetIconPathOnOSX specifies the icon to be shown on the dialog.
 func SetIconPathOnOSX(i string) {

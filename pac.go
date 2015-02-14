@@ -10,11 +10,13 @@ import (
 	"path/filepath"
 )
 
-var helperToolName string = "pac"
+var helperToolName string = "pac-cmd"
 
-func absPath(name string) string {
-	wd, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	return filepath.Join(wd, name)
+// This library will extract a helper tool under application's same directory
+// to actually change proxy setup.
+// SetHelperName specifies the file name to be generated.
+func SetHelperName(name string) {
+	helperToolName = name
 }
 
 /* On tells OS to configure proxy through `pacUrl` */
@@ -49,8 +51,7 @@ func run(cmd *exec.Cmd) error {
 
 func ensureHelperTool() (err error) {
 	absPath := absPath(helperToolName)
-	var fi os.FileInfo
-	if fi, err = os.Stat(absPath); err != nil {
+	if _, err = os.Stat(absPath); err != nil {
 		err = extractHelper(absPath)
 	} else if !prestine(absPath) {
 		os.Remove(absPath)
@@ -69,3 +70,10 @@ func extractHelper(path string) error {
 	}
 	return elevateOnDarwin(path)
 }
+
+func absPath(name string) string {
+	wd, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	return filepath.Join(wd, name)
+}
+
+
