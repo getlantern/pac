@@ -1,6 +1,5 @@
 package pac
 
-import "C"
 import (
 	"bytes"
 	"fmt"
