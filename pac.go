@@ -3,68 +3,59 @@ package pac
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"os/exec"
+	"sync"
+
+	"github.com/getlantern/byteexec"
 )
 
-var helperPath string = "./pac"
+var mu sync.Mutex
+var be *byteexec.Exec
 
-// This library will extract a helper tool to actually change pac.
-// SetHelperPath specifies the file path to be generated.
-// It will be 'pac' under current work directory by default.
-func SetHelperPath(path string) {
-	helperPath = path
+// EnsureHelperToolPresent checks if helper tool exists and extracts it if not.
+// On Mac OS, it also checks and set the file's owner to root:wheel and the setuid bit,
+// it will request user to input password through a dialog to gain the rights to do so.
+// fullPath: the file to be checked and generated if not exists.
+// prompt: the message to be shown on the dialog.
+// iconPath: the full path of the icon to be shown on the dialog.
+func EnsureHelperToolPresent(fullPath string, prompt string, iconFullPath string) (err error) {
+	mu.Lock()
+	defer mu.Unlock()
+	be, err = byteexec.New(pacBytes, fullPath)
+	if err != nil {
+		return fmt.Errorf("Unable to extract helper tool: %s", err)
+	}
+	return ensureElevatedOnDarwin(fullPath, prompt, iconFullPath)
 }
 
 /* On tells OS to configure proxy through `pacUrl` */
 func On(pacUrl string) (err error) {
-	if err = ensureHelperTool(); err != nil {
-		err = fmt.Errorf("Unable to extract helper tool: %s", err)
-		return
+	mu.Lock()
+	defer mu.Unlock()
+	if be == nil {
+		return fmt.Errorf("call EnsureHelperToolPresent() first")
 	}
-	cmd := exec.Command(helperPath, "on", pacUrl)
+	cmd := be.Command("on", pacUrl)
 	return run(cmd)
 }
 
 /* Off sets proxy mode back to direct/none */
 func Off() (err error) {
-	if err = ensureHelperTool(); err != nil {
-		err = fmt.Errorf("Unable to extract helper tool: %s", err)
-		return
+	mu.Lock()
+	defer mu.Unlock()
+	if be == nil {
+		return fmt.Errorf("call EnsureHelperToolPresent() first")
 	}
-	cmd := exec.Command(helperPath, "off")
+	cmd := be.Command("off")
 	return run(cmd)
 }
 
 func run(cmd *exec.Cmd) error {
-	var out bytes.Buffer
-	cmd.Stdout = &out
+	var errOut bytes.Buffer
+	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("Unable to execute pac tool: %s\n%s", err, out.String())
+		return fmt.Errorf("Unable to execute pac tool: %s\n%s", err, errOut.String())
 	}
 	return nil
-}
-
-func ensureHelperTool() (err error) {
-	if _, err = os.Stat(helperPath); err != nil {
-		err = extractHelper(helperPath)
-	} else if !prestine(helperPath) {
-		// remove first so we can write even if we don't have written permission to override directly
-		os.Remove(helperPath)
-		if err != nil {
-			err = fmt.Errorf("Error remove existing %s: %s", helperPath, err)
-		}
-		err = extractHelper(helperPath)
-	}
-	return
-}
-
-func extractHelper(path string) error {
-	err := ioutil.WriteFile(path, pacBytes, 0755)
-	if err != nil {
-		return fmt.Errorf("Error write helper file %s: %s", path, err)
-	}
-	return elevateOnDarwin(path)
 }
