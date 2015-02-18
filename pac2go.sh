@@ -4,7 +4,7 @@ function die() {
   echo $*
   exit 1
 }
-which 2goarray > /dev/null || go get github.com/jteeuwen/go-bindata/...
+which 2goarray > /dev/null || go get github.com/cratonica/2goarray/...
 which 2goarray > /dev/null || die "Please install 2goarray manually, then try again"
 
 if [ -r "pac-cmd/pac" ]

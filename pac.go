@@ -10,8 +10,7 @@ import (
 
 var helperPath string = "./pac"
 
-// This library will extract a helper tool under application's same directory
-// to actually change proxy setup.
+// This library will extract a helper tool to actually change pac.
 // SetHelperPath specifies the file path to be generated.
 // It will be 'pac' under current work directory by default.
 func SetHelperPath(path string) {
@@ -52,7 +51,7 @@ func ensureHelperTool() (err error) {
 	if _, err = os.Stat(helperPath); err != nil {
 		err = extractHelper(helperPath)
 	} else if !prestine(helperPath) {
-		// remove first so we can write even if we don't have written permission to previous file
+		// remove first so we can write even if we don't have written permission to override directly
 		os.Remove(helperPath)
 		if err != nil {
 			err = fmt.Errorf("Error remove existing %s: %s", helperPath, err)

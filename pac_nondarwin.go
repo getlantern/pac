@@ -2,10 +2,10 @@
 
 package pac
 
-func SetIconPathOnOSX(i string) {
+func SetIconPathOnMacOS(i string) {
 }
 
-func SetPromptOnOSX(p string) {
+func SetPromptOnMacOS(p string) {
 }
 
 func prestine(path string) bool {

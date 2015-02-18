@@ -2,7 +2,7 @@ package pac
 
 /*
 #cgo darwin CFLAGS: -DDARWIN -x objective-c
-#cgo darwin LDFLAGS: -framework Cocoa -framework SystemConfiguration -framework Security
+#cgo darwin LDFLAGS: -framework Cocoa -framework Security
 
 extern int runAuthorized(char *path, char *prompt, char *iconPath);
 const char* null() { return 0; }
@@ -16,15 +16,13 @@ import (
 var iconPath string
 var prompt string
 
-// Mac OSX will show a dialog requesting user to input password,
-// SetIconPathOnOSX specifies the icon to be shown on the dialog.
-func SetIconPathOnOSX(i string) {
+// SetIconPathOnMacOS specifies the icon to be shown on the dialog.
+func SetIconPathOnMacOS(i string) {
 	iconPath = i
 }
 
-// Mac OSX will show a dialog requesting user to input password,
-// SetPromptOnOSX specifies the text to be shown on this dialog.
-func SetPromptOnOSX(p string) {
+// SetPromptOnMacOS specifies the text to be shown on the dialog.
+func SetPromptOnMacOS(p string) {
 	prompt = p
 }
 
