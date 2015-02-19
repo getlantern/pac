@@ -44,7 +44,6 @@ func On(pacUrl string) (err error) {
 		return fmt.Errorf("call EnsureHelperToolPresent() first")
 	}
 
-	log.Debug(be.Filename)
 	cmd := be.Command("on", pacUrl)
 	return run(cmd)
 }
