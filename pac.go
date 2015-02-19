@@ -1,7 +1,6 @@
 package pac
 
 import (
-	"bytes"
 	"fmt"
 	"os/exec"
 	"sync"
@@ -25,7 +24,7 @@ func EnsureHelperToolPresent(fullPath string, prompt string, iconFullPath string
 	if err != nil {
 		return fmt.Errorf("Unable to extract helper tool: %s", err)
 	}
-	return ensureElevatedOnDarwin(fullPath, prompt, iconFullPath)
+	return ensureElevatedOnDarwin(be, fullPath, prompt, iconFullPath)
 }
 
 /* On tells OS to configure proxy through `pacUrl` */
@@ -51,11 +50,9 @@ func Off() (err error) {
 }
 
 func run(cmd *exec.Cmd) error {
-	var errOut bytes.Buffer
-	cmd.Stderr = &errOut
-	err := cmd.Run()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("Unable to execute pac tool: %s\n%s", err, errOut.String())
+		return fmt.Errorf("Unable to execute helper tool: %s\n%s", err, string(out))
 	}
 	return nil
 }

@@ -10,8 +10,12 @@ import (
 func main() {
 	helperFullPath, _ := filepath.Abs("./pac-cmd")
 	iconFullPath, _ := filepath.Abs("./icon.png")
-	pac.EnsureHelperToolPresent(helperFullPath, "Input your password and save the world!", iconFullPath)
-	err := pac.On("localhost:12345/pac")
+	err := pac.EnsureHelperToolPresent(helperFullPath, "Input your password and save the world!", iconFullPath)
+	if err != nil {
+		fmt.Printf("Error EnsureHelperToolPresent: %s\n", err)
+		return
+	}
+	err = pac.On("localhost:12345/pac")
 	if err != nil {
 		fmt.Printf("Error set proxy: %s\n", err)
 		return
