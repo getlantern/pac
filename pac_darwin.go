@@ -1,8 +1,10 @@
 package pac
 
-import "github.com/getlantern/byteexec"
+import (
+	"github.com/getlantern/byteexec"
+	"github.com/getlantern/elevate"
+)
 
-import "C"
 import (
 	"fmt"
 	"syscall"
@@ -17,6 +19,6 @@ func ensureElevatedOnDarwin(be *byteexec.Exec, helperFullPath string, prompt str
 	if s.Mode&syscall.S_ISUID > 0 && s.Uid == 0 && s.Gid == 0 {
 		return
 	}
-	cmd := be.Command("elevate", prompt, iconFullPath)
+	cmd := elevate.PromptWithIcon(prompt, iconFullPath, be.Filename, "setuid")
 	return run(cmd)
 }
