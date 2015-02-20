@@ -1,22 +1,25 @@
 package pac
 
-import "github.com/getlantern/byteexec"
+import (
+	"github.com/getlantern/byteexec"
+	"github.com/getlantern/elevate"
+)
 
-import "C"
 import (
 	"fmt"
 	"syscall"
 )
 
-func ensureElevatedOnDarwin(be *byteexec.Exec, helperFullPath string, prompt string, iconFullPath string) (err error) {
+func ensureElevatedOnDarwin(be *byteexec.Exec, prompt string, iconFullPath string) (err error) {
 	var s syscall.Stat_t
 	// we just checked its existence, not bother checking specific error again
-	if err = syscall.Stat(helperFullPath, &s); err != nil {
+	if err = syscall.Stat(be.Filename, &s); err != nil {
 		return fmt.Errorf("Error stating helper tool %s: %s", err)
 	}
 	if s.Mode&syscall.S_ISUID > 0 && s.Uid == 0 && s.Gid == 0 {
+		log.Tracef("%v is already owned by root:wheel and has setuid bit on", be.Filename)
 		return
 	}
-	cmd := be.Command("elevate", prompt, iconFullPath)
+	cmd := elevate.PromptWithIcon(prompt, iconFullPath, be.Filename, "setuid")
 	return run(cmd)
 }

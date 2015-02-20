@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/getlantern/golog"
 	"github.com/getlantern/pac"
 )
 
+var log = golog.LoggerFor("example")
+
 func main() {
-	helperFullPath, _ := filepath.Abs("./pac-cmd")
+	helperFullPath := "pac-cmd"
 	iconFullPath, _ := filepath.Abs("./icon.png")
+	log.Debugf("Using icon at %v", iconFullPath)
 	err := pac.EnsureHelperToolPresent(helperFullPath, "Input your password and save the world!", iconFullPath)
 	if err != nil {
 		fmt.Printf("Error EnsureHelperToolPresent: %s\n", err)
