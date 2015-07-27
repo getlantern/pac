@@ -14,7 +14,7 @@ See 'example/main.go' for detailed usage.
 
 ### Embedding pac-cmd
 
-pac uses binaries from the [pac-cmd](https://github.com/getlantern/pac) project.
+pac uses binaries from the [pac-cmd](https://github.com/getlantern/pac-cmd) project.
 
 To embed the binaries for different platforms, use the `pac2go.sh` script. This
 script takes care of code signing the Windows and OS X executables.
