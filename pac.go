@@ -3,6 +3,7 @@ package pac
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"github.com/getlantern/byteexec"
@@ -47,7 +48,10 @@ func On(pacUrl string) (err error) {
 	}
 
 	cmd := be.Command("on", pacUrl)
-	return run(cmd)
+	if err := run(cmd); err != nil {
+		return err
+	}
+	return verify(pacUrl)
 }
 
 /* Off sets proxy mode back to direct/none */
@@ -58,7 +62,10 @@ func Off(pacUrl string) (err error) {
 		return fmt.Errorf("call EnsureHelperToolPresent() first")
 	}
 	cmd := be.Command("off", pacUrl)
-	return run(cmd)
+	if err := run(cmd); err != nil {
+		return err
+	}
+	return verify(pacUrl)
 }
 
 func run(cmd *exec.Cmd) error {
@@ -67,5 +74,25 @@ func run(cmd *exec.Cmd) error {
 		return fmt.Errorf("Unable to execute %v: %s\n%s", cmd.Path, err, string(out))
 	}
 	log.Tracef("Command %v output %v", cmd.Path, string(out))
+	return nil
+}
+
+func verify(expected string) error {
+	cmd := be.Command("show")
+	out, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	str := string(out)
+	log.Tracef("Command %v output %v", cmd.Path, str)
+	if expected == "" && str != "" {
+		return fmt.Errorf("Unexpected output %s", str)
+	}
+	lines := strings.Split(str, "\n")
+	for _, l := range lines {
+		if strings.TrimSpace(l) != expected {
+			return fmt.Errorf("Unexpected output %s", l)
+		}
+	}
 	return nil
 }
