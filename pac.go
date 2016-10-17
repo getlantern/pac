@@ -73,7 +73,7 @@ func run(cmd *exec.Cmd) error {
 	if err != nil {
 		return fmt.Errorf("Unable to execute %v: %s\n%s", cmd.Path, err, string(out))
 	}
-	log.Tracef("Command %v output %v", cmd.Path, string(out))
+	log.Debugf("Command %v output %v", cmd.Path, string(out))
 	return nil
 }
 
@@ -84,7 +84,7 @@ func verify(expected string) error {
 		return err
 	}
 	str := string(out)
-	log.Tracef("Command %v output %v", cmd.Path, str)
+	log.Debugf("Command %v output %v", cmd.Path, str)
 	if expected == "" && str != "" {
 		return fmt.Errorf("Unexpected output %s", str)
 	}
