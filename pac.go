@@ -90,7 +90,8 @@ func verify(expected string) error {
 	}
 	lines := strings.Split(str, "\n")
 	for _, l := range lines {
-		if strings.TrimSpace(l) != expected {
+		trimmed := strings.TrimSpace(l)
+		if trimmed != "" && trimmed != expected {
 			return fmt.Errorf("Unexpected output %s", l)
 		}
 	}
