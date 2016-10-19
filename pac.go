@@ -3,6 +3,7 @@ package pac
 import (
 	"fmt"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -28,7 +29,12 @@ var (
 func EnsureHelperToolPresent(path string, prompt string, iconFullPath string) (err error) {
 	mu.Lock()
 	defer mu.Unlock()
-	pacBytes, err := Asset("pac")
+	assertName := "pac"
+	// Load different binaries for 32bit and 64bit Windows respectively.
+	if runtime.GOOS == "windows" {
+		assertName = assertName + "_" + runtime.GOARCH + ".exe"
+	}
+	pacBytes, err := Asset(assertName)
 	if err != nil {
 		return fmt.Errorf("Unable to access pac asset: %v", err)
 	}
