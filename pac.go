@@ -2,6 +2,7 @@ package pac
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -32,7 +33,13 @@ func EnsureHelperToolPresent(path string, prompt string, iconFullPath string) (e
 	assertName := "pac"
 	// Load different binaries for 32bit and 64bit Windows respectively.
 	if runtime.GOOS == "windows" {
-		assertName = assertName + "_" + runtime.GOARCH + ".exe"
+		suffix := "_386.exe"
+		// https://blogs.msdn.microsoft.com/david.wang/2006/03/27/howto-detect-process-bitness/
+		if strings.EqualFold(os.Getenv("PROCESSOR_ARCHITECTURE"), "amd64") ||
+			strings.EqualFold(os.Getenv("PROCESSOR_ARCHITEW6432"), "amd64") {
+			suffix = "_amd64.exe"
+		}
+		assertName = assertName + suffix
 	}
 	pacBytes, err := Asset(assertName)
 	if err != nil {
